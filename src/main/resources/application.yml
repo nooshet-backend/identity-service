@@ -1,0 +1,68 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: nooshet-identity-service
+  
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:postgresql-identity}:5432/${DB_NAME:nooshet_identity}?sslmode=disable
+    username: ${DB_USERNAME:nooshet_identity}
+    password: ${DB_PASSWORD:identity_password_123}
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+springdoc:
+  server-url: "http://identity.nooshet.local"
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:your-256-bit-secret-your-256-bit-secret}
+  issuer: ${JWT_ISSUER:nooshet}
+  access-ttl-seconds: ${JWT_ACCESS_TTL_SECONDS:3600}
+  refresh-ttl-seconds: ${JWT_REFRESH_TTL_SECONDS:604800}
+
+# OTP Configuration
+otp:
+  ttl-seconds: ${OTP_TTL_SECONDS:300}
+  max-verify-attempts: ${OTP_MAX_VERIFY_ATTEMPTS:3}
+  resend-cooldown-seconds: ${OTP_RESEND_COOLDOWN_SECONDS:30}
+  rate-limit:
+    max-attempts: 5
+    window-minutes: 15
+    cooldown-seconds: 60
+    min-cooldown-seconds: 5
+    error-message-threshold-seconds: 30
+
+logging:
+  level:
+    root: INFO
+    org.nooshet.identity: DEBUG
+    org.springframework.security: DEBUG
