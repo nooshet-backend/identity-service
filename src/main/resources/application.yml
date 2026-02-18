@@ -19,10 +19,10 @@ spring:
 
   data:
     redis:
-      host: ${REDIS_HOST:redis}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
-      timeout: 2000ms
+      host: ${SPRING_REDIS_HOST:${REDIS_HOST:redis}}
+      port: ${SPRING_REDIS_PORT:${REDIS_PORT:6379}}
+      password: ${SPRING_REDIS_PASSWORD:${REDIS_PASSWORD:}}
+      timeout: ${SPRING_REDIS_TIMEOUT:2000ms}
 
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
