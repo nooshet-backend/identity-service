@@ -17,6 +17,7 @@ public class OpenApiConfig {
 
     @Bean
     public OpenAPI customOpenAPI() {
+        // OpenAPI configuration for Identity Service
         OpenAPI openAPI = new OpenAPI()
                 .info(new Info()
                         .title("Identity Service API")
