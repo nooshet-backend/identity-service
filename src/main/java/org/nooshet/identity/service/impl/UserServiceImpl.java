@@ -17,15 +17,15 @@ public class UserServiceImpl implements UserService {
     private final org.nooshet.identity.client.UserServiceClient userServiceClient;
 
     @Override
-    public User createNewUser(String firstName, String lastName, String passwordHash, String phone, String userType, String email) {
-        org.nooshet.identity.entity.Role role = roleRepository.findByName(userType)
-                .orElseThrow(() -> new RuntimeException("Role not found: " + userType));
-        
+    public User createNewUser(String firstName, String lastName, String passwordHash, String phone, String role, String email) {
+        org.nooshet.identity.entity.Role roleEntity = roleRepository.findByName(role)
+                .orElseThrow(() -> new RuntimeException("Role not found: " + role));
+
         User user = User.builder()
                 .phone(phone)
                 .email(email)
                 .passwordHash(passwordHash)
-                .role(role)
+                .role(roleEntity)
                 .setupRequired(true)
                 .build();
 
@@ -39,7 +39,7 @@ public class UserServiceImpl implements UserService {
                     .lastName(lastName)
                     .phoneNumber(phone)
                     .email(email)
-                    .role(role.getName()) // Send role name as String
+                    .role(roleEntity.getName()) // Send role name as String
                     .build();
             
             // TODO: Use a secure internal secret or proper auth

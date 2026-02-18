@@ -29,18 +29,18 @@ public class RegistrationServiceImpl implements RegistrationService {
 
     @Override
     @Transactional
-    public LoginResponse completeRegistration(RegisterCompleteRequest request) {
+    public LoginResponse completeRegistration(RegisterCompleteRequest request, String role) {
         if (!request.getPassword().equals(request.getPasswordConfirm())) {
             throw new IllegalArgumentException("Passwords do not match");
         }
 
-        // Create user with hashed password
+        // Create user with hashed password and provided role
         User user = userService.createNewUser(
                 request.getFirstName(),
                 request.getLastName(),
                 passwordEncoder.encode(request.getPassword()),
                 request.getPhoneNumber(),
-                request.getUserType(),
+                role,
                 request.getEmail()
         );
 
@@ -56,11 +56,15 @@ public class RegistrationServiceImpl implements RegistrationService {
     }
 
     @Override
-    public OtpSendResponse startRegistration(RegisterRequest request) {
-        // Use OtpPurpose.REGISTRATION
+    public OtpSendResponse startRegistration(RegisterRequest request, String role) {
+        // Validate password confirmation
+        if (!request.getPassword().equals(request.getPasswordConfirm())) {
+            throw new IllegalArgumentException("Passwords do not match");
+        }
+        // Use OtpPurpose.REGISTRATION, send OTP to email
         return otpService.sendOtp(
             org.nooshet.identity.dto.OtpSendRequest.builder()
-                .mobile(request.getPhoneNumber())
+                .email(request.getEmail())
                 .purpose(org.nooshet.identity.constants.OtpPurpose.REGISTRATION)
                 .build()
         );

@@ -29,24 +29,45 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Start registration: send OTP to courier")
+    @PostMapping("/register/courier")
+    public ResponseEntity<OtpSendResponse> startCourierRegistration(@Valid @RequestBody RegisterRequest request) {
+        OtpSendResponse response = registrationService.startRegistration(request, "COURIER");
+        return ResponseEntity.ok(response);
+    }
+
     @Operation(summary = "Start registration: send OTP to user")
-    @PostMapping("/register")
-    public ResponseEntity<OtpSendResponse> startRegistration(@Valid @RequestBody RegisterRequest request) {
-        OtpSendResponse response = registrationService.startRegistration(request);
+    @PostMapping("/register/user")
+    public ResponseEntity<OtpSendResponse> startUserRegistration(@Valid @RequestBody RegisterRequest request) {
+        OtpSendResponse response = registrationService.startRegistration(request, "USER");
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Verify registration OTP")
-    @PostMapping("/verify-otp")
-    public ResponseEntity<OtpVerifyResponse> verifyRegistrationOtp(@Valid @RequestBody OtpVerifyRequest request) {
-        OtpVerifyResponse response = registrationService.verifyRegistrationOtp(request);
+    @Operation(summary = "Start registration: send OTP to chef")
+    @PostMapping("/register/chef")
+    public ResponseEntity<OtpSendResponse> startChefRegistration(@Valid @RequestBody RegisterRequest request) {
+        OtpSendResponse response = registrationService.startRegistration(request, "CHEF");
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Complete registration after OTP verification")
-    @PostMapping("/register/complete")
-    public ResponseEntity<LoginResponse> completeRegistration(@Valid @RequestBody RegisterCompleteRequest request) {
-        LoginResponse response = registrationService.completeRegistration(request);
+    @Operation(summary = "Complete registration for courier after OTP verification")
+    @PostMapping("/register/courier/complete")
+    public ResponseEntity<LoginResponse> completeCourierRegistration(@Valid @RequestBody RegisterCompleteRequest request) {
+        LoginResponse response = registrationService.completeRegistration(request, "COURIER");
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @Operation(summary = "Complete registration for user after OTP verification")
+    @PostMapping("/register/user/complete")
+    public ResponseEntity<LoginResponse> completeUserRegistration(@Valid @RequestBody RegisterCompleteRequest request) {
+        LoginResponse response = registrationService.completeRegistration(request, "USER");
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @Operation(summary = "Complete registration for chef after OTP verification")
+    @PostMapping("/register/chef/complete")
+    public ResponseEntity<LoginResponse> completeChefRegistration(@Valid @RequestBody RegisterCompleteRequest request) {
+        LoginResponse response = registrationService.completeRegistration(request, "CHEF");
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

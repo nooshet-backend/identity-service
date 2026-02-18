@@ -8,7 +8,7 @@ import org.nooshet.identity.dto.OtpVerifyResponse;
 import org.nooshet.identity.dto.RegisterRequest;
 
 public interface RegistrationService {
-    OtpSendResponse startRegistration(RegisterRequest request);
+    OtpSendResponse startRegistration(RegisterRequest request, String role);
     OtpVerifyResponse verifyRegistrationOtp(OtpVerifyRequest request);
-    LoginResponse completeRegistration(RegisterCompleteRequest request);
+    LoginResponse completeRegistration(RegisterCompleteRequest request, String role);
 }

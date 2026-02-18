@@ -32,6 +32,6 @@ public class RegisterCompleteRequest {
     @NotBlank(message = "Password confirmation is required")
     private String passwordConfirm;
 
-    @NotBlank(message = "User type is required")
-    private String userType; // USER | COURIER | CHEF
+    @NotBlank(message = "Registration token is required")
+    private String registrationToken;
 }
