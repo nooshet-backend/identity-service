@@ -48,12 +48,9 @@ public class SecurityConfig {
                 .requestMatchers(new AntPathRequestMatcher("/api/v1/internal/**")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/login")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/refresh")).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/register")).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/register/complete")).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/otp/**")).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/social/**")).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/forgot-password/**")).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/reset-password")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/register/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/verify-otp")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/password-reset/**")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/actuator/**")).permitAll()
@@ -89,4 +86,3 @@ public class SecurityConfig {
         return source;
     }
 }
-
