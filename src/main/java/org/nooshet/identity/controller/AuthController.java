@@ -29,9 +29,23 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Register (collects name, phone, email, password twice and creates user)")
+    @Operation(summary = "Start registration: send OTP to user")
     @PostMapping("/register")
-    public ResponseEntity<LoginResponse> register(@Valid @RequestBody RegisterCompleteRequest request) {
+    public ResponseEntity<OtpSendResponse> startRegistration(@Valid @RequestBody RegisterRequest request) {
+        OtpSendResponse response = registrationService.startRegistration(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Verify registration OTP")
+    @PostMapping("/verify-otp")
+    public ResponseEntity<OtpVerifyResponse> verifyRegistrationOtp(@Valid @RequestBody OtpVerifyRequest request) {
+        OtpVerifyResponse response = registrationService.verifyRegistrationOtp(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Complete registration after OTP verification")
+    @PostMapping("/register/complete")
+    public ResponseEntity<LoginResponse> completeRegistration(@Valid @RequestBody RegisterCompleteRequest request) {
         LoginResponse response = registrationService.completeRegistration(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

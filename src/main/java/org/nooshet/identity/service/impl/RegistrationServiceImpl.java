@@ -2,11 +2,16 @@ package org.nooshet.identity.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.nooshet.identity.dto.LoginResponse;
+import org.nooshet.identity.dto.OtpSendResponse;
+import org.nooshet.identity.dto.OtpVerifyRequest;
+import org.nooshet.identity.dto.OtpVerifyResponse;
 import org.nooshet.identity.dto.RegisterCompleteRequest;
+import org.nooshet.identity.dto.RegisterRequest;
 import org.nooshet.identity.entity.User;
 import org.nooshet.identity.security.JwtService;
 import org.nooshet.identity.service.RegistrationService;
 import org.nooshet.identity.service.UserService;
+import org.nooshet.identity.service.OtpService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +25,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final OtpService otpService;
 
     @Override
     @Transactional
@@ -47,5 +53,21 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .refreshToken(refreshToken)
                 .expiresIn(3600L) // Should utilize properties
                 .build();
+    }
+
+    @Override
+    public OtpSendResponse startRegistration(RegisterRequest request) {
+        // Use OtpPurpose.REGISTRATION
+        return otpService.sendOtp(
+            org.nooshet.identity.dto.OtpSendRequest.builder()
+                .mobile(request.getPhoneNumber())
+                .purpose(org.nooshet.identity.constants.OtpPurpose.REGISTRATION)
+                .build()
+        );
+    }
+
+    @Override
+    public OtpVerifyResponse verifyRegistrationOtp(OtpVerifyRequest request) {
+        return otpService.verifyOtpAndIssueToken(request);
     }
 }
