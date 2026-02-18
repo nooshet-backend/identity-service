@@ -2,7 +2,7 @@ package org.nooshet.identity.configuration;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.nooshet.identity.security.JwtAuthenticationFilter;
+import org.nooshet.identity.security.NooshetSecurityFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -27,7 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final NooshetSecurityFilter securityFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -48,12 +48,7 @@ public class SecurityConfig {
                 .requestMatchers(new AntPathRequestMatcher("/api/v1/internal/**")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/login")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/refresh")).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/register/user")).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/register/courier")).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/register/chef")).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/register/user/complete")).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/register/courier/complete")).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/register/chef/complete")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/register/**")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/password-reset/**")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
                 .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
@@ -72,7 +67,7 @@ public class SecurityConfig {
                     response.getWriter().write("{\"error\":\"Forbidden\"}");
                 })
             )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
