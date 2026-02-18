@@ -10,6 +10,9 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Map;
 
 @Service
@@ -43,6 +46,19 @@ public class EmailServiceImpl implements EmailService {
         } catch (Exception e) {
             // Log error
             e.printStackTrace();
+        }
+    }
+
+    public String loadAndFillTemplate(String templatePath, Map<String, Object> variables) {
+        try {
+            String content = new String(Files.readAllBytes(Paths.get(templatePath)), StandardCharsets.UTF_8);
+            for (Map.Entry<String, Object> entry : variables.entrySet()) {
+                content = content.replace("{{" + entry.getKey() + "}}", String.valueOf(entry.getValue()));
+            }
+            return content;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Your verification code is: " + variables.getOrDefault("otp", "");
         }
     }
 }

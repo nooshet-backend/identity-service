@@ -1,0 +1,13 @@
+Subject: Your Nooshet Verification Code
+
+Hello,
+
+Your verification code is: {{otp}}
+
+This code will expire in {{expiresIn}} minutes.
+
+If you did not request this, please ignore this email.
+
+Thank you,
+Nooshet Team
+

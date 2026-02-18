@@ -109,10 +109,17 @@ public class OtpServiceImpl implements OtpService {
 
         // Send Email
         if (request.getEmail() != null) {
+            Map<String, Object> variables = Map.of(
+                "otp", otp,
+                "expiresIn", otpTtlSeconds / 60
+            );
+            String templatePath = "src/main/resources/templates/otp-email-template.txt";
+            String emailContent = ((org.nooshet.identity.service.impl.EmailServiceImpl) emailService)
+                .loadAndFillTemplate(templatePath, variables);
             emailService.sendSimpleEmail(
-                request.getEmail(), 
-                getSubjectForPurpose(purpose), 
-                "Your code is: " + otp
+                request.getEmail(),
+                getSubjectForPurpose(purpose),
+                emailContent
             );
         }
         
