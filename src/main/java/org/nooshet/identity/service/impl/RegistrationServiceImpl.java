@@ -30,28 +30,18 @@ public class RegistrationServiceImpl implements RegistrationService {
     @Override
     @Transactional
     public LoginResponse completeRegistration(RegisterCompleteRequest request, String role) {
-        if (!request.getPassword().equals(request.getPasswordConfirm())) {
-            throw new IllegalArgumentException("Passwords do not match");
-        }
-
-        // Create user with hashed password and provided role
-        User user = userService.createNewUser(
-                request.getFirstName(),
-                request.getLastName(),
-                passwordEncoder.encode(request.getPassword()),
-                request.getPhoneNumber(),
-                role,
-                request.getEmail()
-        );
+        // Use registrationToken to look up or validate user registration
+        // Example: fetch user info from temporary storage or token payload
+        // For now, just a placeholder implementation
+        User user = userService.completeUserRegistration(request.getRegistrationToken(), role);
 
         // Generate Tokens
         String accessToken = jwtService.generateAccessToken(user.getId(), Collections.singletonList(user.getRole().getName()));
         String refreshToken = jwtService.generateRefreshToken(user.getId());
-        
         return LoginResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
-                .expiresIn(3600L) // Should utilize properties
+                .expiresIn(3600L)
                 .build();
     }
 

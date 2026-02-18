@@ -52,4 +52,11 @@ public class UserServiceImpl implements UserService {
 
         return saved;
     }
+
+    @Override
+    public User completeUserRegistration(String registrationToken, String role) {
+        // TODO: Implement logic to fetch user info from temporary storage or token payload
+        // For now, throw unsupported operation
+        throw new UnsupportedOperationException("completeUserRegistration not implemented yet");
+    }
 }
