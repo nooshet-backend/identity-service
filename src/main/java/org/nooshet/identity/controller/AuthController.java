@@ -71,6 +71,13 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @Operation(summary = "Verify registration OTP")
+    @PostMapping("/register/verify-otp")
+    public ResponseEntity<OtpVerifyResponse> verifyRegistrationOtp(@Valid @RequestBody OtpVerifyRequest request) {
+        OtpVerifyResponse response = registrationService.verifyRegistrationOtp(request);
+        return ResponseEntity.ok(response);
+    }
+
     // Password Reset Endpoints
 
     @Operation(summary = "Request password reset OTP via email or SMS")
