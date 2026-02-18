@@ -35,5 +35,15 @@ public class OpenApiConfig {
         }
         return openAPI;
     }
+
+    @Bean
+    public org.springdoc.core.customizers.OperationCustomizer operationCustomizer() {
+        return (operation, handlerMethod) -> {
+            if (operation.getDescription() != null && operation.getDescription().isEmpty()) {
+                operation.setDescription(null);
+            }
+            return operation;
+        };
+    }
 }
 
