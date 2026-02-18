@@ -43,7 +43,7 @@ public class UserServiceImpl implements UserService {
                     .build();
             
             // TODO: Use a secure internal secret or proper auth
-            userServiceClient.createProfile(profileRequest, "internal-secret");
+            userServiceClient.createProfile(profileRequest, "change-me-in-prod-please-use-a-longer-secret-key-123456");
         } catch (Exception e) {
             // Log error but allow auth user creation? Or rollback?
             // For now, logging.
