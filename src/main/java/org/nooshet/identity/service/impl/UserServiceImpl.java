@@ -104,4 +104,12 @@ public class UserServiceImpl implements UserService {
         // Optionally, create profile in user-service
         return saved;
     }
+
+    @Override
+    public void markSetupComplete(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+        user.setSetupRequired(false);
+        userRepository.save(user);
+    }
 }

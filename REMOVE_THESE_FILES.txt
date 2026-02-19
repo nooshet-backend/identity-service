@@ -1,0 +1,14 @@
+Remove the following files from identity-service as they are now handled in user-service:
+
+- /Users/aousganeh/Desktop/nooshet/backend/identity-service/src/main/java/org/nooshet/identity/dto/CookSetupRequest.java
+- /Users/aousganeh/Desktop/nooshet/backend/identity-service/src/main/java/org/nooshet/identity/dto/CourierSetupRequest.java
+- /Users/aousganeh/Desktop/nooshet/backend/identity-service/src/main/java/org/nooshet/identity/dto/BuyerSetupRequest.java
+- /Users/aousganeh/Desktop/nooshet/backend/identity-service/src/main/java/org/nooshet/identity/dto/CookKitchenPhotoRequest.java
+- /Users/aousganeh/Desktop/nooshet/backend/identity-service/src/main/java/org/nooshet/identity/dto/CookRulesAcceptanceRequest.java
+- /Users/aousganeh/Desktop/nooshet/backend/identity-service/src/main/java/org/nooshet/identity/dto/CourierSelfieRequest.java
+- /Users/aousganeh/Desktop/nooshet/backend/identity-service/src/main/java/org/nooshet/identity/dto/CourierRulesAcceptanceRequest.java
+- /Users/aousganeh/Desktop/nooshet/backend/identity-service/src/main/java/org/nooshet/identity/dto/BuyerRulesAcceptanceRequest.java
+- /Users/aousganeh/Desktop/nooshet/backend/identity-service/src/main/java/org/nooshet/identity/dto/CookRegistrationRequest.java
+- /Users/aousganeh/Desktop/nooshet/backend/identity-service/src/main/java/org/nooshet/identity/dto/CourierRegistrationRequest.java
+- /Users/aousganeh/Desktop/nooshet/backend/identity-service/src/main/java/org/nooshet/identity/dto/BuyerRegistrationRequest.java
+
