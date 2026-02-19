@@ -66,6 +66,8 @@ public class OtpServiceImpl implements OtpService {
         // Rate Limit Check
         var rateLimitResult = otpRateLimiter.checkRateLimit(purpose, identifier);
         if (!rateLimitResult.isAllowed()) {
+            // Log rate limit event for debugging
+            System.out.println("[OTP RATE LIMIT] Blocked OTP request for identifier: " + identifier + ", purpose: " + purpose + ", waitTimeSeconds: " + rateLimitResult.getWaitTimeSeconds());
             throw new OtpRateLimitedException("Rate limit exceeded", rateLimitResult.getWaitTimeSeconds());
         }
 
