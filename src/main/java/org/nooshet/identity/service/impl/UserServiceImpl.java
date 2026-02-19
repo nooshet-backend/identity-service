@@ -19,6 +19,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User createNewUser(String firstName, String lastName, String passwordHash, String phone, String role, String email) {
+        // Validate unique email
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new IllegalStateException("A user with this email already exists");
+        }
+        // Validate unique phone
+        if (userRepository.findByPhone(phone).isPresent()) {
+            throw new IllegalStateException("A user with this phone number already exists");
+        }
+
         org.nooshet.identity.entity.Role roleEntity = roleRepository.findByName(role)
                 .orElseThrow(() -> new RuntimeException("Role not found: " + role));
 
@@ -67,6 +76,9 @@ public class UserServiceImpl implements UserService {
         // Here, we only have the email, so we will create a minimal user
         if (userRepository.findByEmail(identifier).isPresent()) {
             throw new IllegalStateException("User already exists with this email");
+        }
+        if (userRepository.findByPhone(identifier).isPresent()) {
+            throw new IllegalStateException("User already exists with this phone number");
         }
 
         // For demo, use email as both email and phone, and set dummy values for other fields
