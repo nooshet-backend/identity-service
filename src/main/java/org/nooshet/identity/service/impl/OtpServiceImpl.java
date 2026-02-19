@@ -80,7 +80,7 @@ public class OtpServiceImpl implements OtpService {
         // For registration: we typically want to send OTP only if user DOES NOT exist (or maybe verify email anyway)
         // For password reset: we want to send only if user EXISTS
         if (purpose == OtpPurpose.REGISTRATION && exists) {
-            throw new org.nooshet.identity.exception.BadRequestException("A user with this email or phone already exists");
+            throw new org.nooshet.identity.exception.ConflictException("A user with this email or phone already exists");
         } else if (purpose == OtpPurpose.PASSWORD_RESET && !exists) {
             throw new org.nooshet.identity.exception.BadRequestException("No user found with this email or phone");
         }
