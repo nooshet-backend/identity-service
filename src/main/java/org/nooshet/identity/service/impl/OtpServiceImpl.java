@@ -79,17 +79,10 @@ public class OtpServiceImpl implements OtpService {
         // Security: Don't reveal if user exists or not, but handle logic
         // For registration: we typically want to send OTP only if user DOES NOT exist (or maybe verify email anyway)
         // For password reset: we want to send only if user EXISTS
-        
-        boolean shouldSend = true;
         if (purpose == OtpPurpose.REGISTRATION && exists) {
-             shouldSend = false; 
-             // In real app, maybe send "You already have an account" email
+            throw new org.nooshet.identity.exception.BadRequestException("A user with this email or phone already exists");
         } else if (purpose == OtpPurpose.PASSWORD_RESET && !exists) {
-             shouldSend = false;
-        }
-
-        if (!shouldSend) {
-             return createFakeResponse();
+            throw new org.nooshet.identity.exception.BadRequestException("No user found with this email or phone");
         }
 
         String otp = otpGenerator.generateOtp();
