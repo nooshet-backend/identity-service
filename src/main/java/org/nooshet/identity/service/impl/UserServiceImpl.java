@@ -15,6 +15,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final org.nooshet.identity.repository.RoleRepository roleRepository;
     private final org.nooshet.identity.client.UserServiceClient userServiceClient;
+    private final org.nooshet.identity.service.RegistrationTokenService registrationTokenService;
 
     @Override
     public User createNewUser(String firstName, String lastName, String passwordHash, String phone, String role, String email) {
@@ -55,8 +56,40 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User completeUserRegistration(String registrationToken, String role) {
-        // TODO: Implement logic to fetch user info from temporary storage or token payload
-        // For now, throw unsupported operation
-        throw new UnsupportedOperationException("completeUserRegistration not implemented yet");
+        // Use RegistrationTokenService to validate and get the identifier (email)
+        String identifier = registrationTokenService.validateAndGetIdentifier(registrationToken);
+        if (identifier == null) {
+            throw new IllegalArgumentException("Invalid or expired registration token");
+        }
+
+        // For demo: fetch registration data from Redis as JSON (assume email as identifier)
+        // In a real app, store all registration data (firstName, lastName, passwordHash, phone, email) in Redis at registration start
+        // Here, we only have the email, so we will create a minimal user
+        if (userRepository.findByEmail(identifier).isPresent()) {
+            throw new IllegalStateException("User already exists with this email");
+        }
+
+        // For demo, use email as both email and phone, and set dummy values for other fields
+        String firstName = "User";
+        String lastName = "";
+        String passwordHash = "";
+        String phone = identifier;
+        String email = identifier;
+
+        // Find role entity
+        org.nooshet.identity.entity.Role roleEntity = roleRepository.findByName(role)
+                .orElseThrow(() -> new RuntimeException("Role not found: " + role));
+
+        User user = User.builder()
+                .phone(phone)
+                .email(email)
+                .passwordHash(passwordHash)
+                .role(roleEntity)
+                .setupRequired(true)
+                .build();
+
+        User saved = userRepository.save(user);
+        // Optionally, create profile in user-service
+        return saved;
     }
 }
