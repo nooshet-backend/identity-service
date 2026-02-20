@@ -58,7 +58,7 @@ public class OtpServiceImpl implements OtpService {
         }
         
         if (identifier == null || identifier.isBlank()) {
-            throw new IllegalArgumentException("Email or mobile must be provided");
+            throw new org.nooshet.identity.exception.BadRequestException("Email or mobile must be provided");
         }
 
         OtpPurpose purpose = request.getPurpose();

@@ -49,7 +49,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     public OtpSendResponse startRegistration(RegisterRequest request, String role) {
         // Validate password confirmation
         if (!request.getPassword().equals(request.getPasswordConfirm())) {
-            throw new IllegalArgumentException("Passwords do not match");
+            throw new org.nooshet.identity.exception.BadRequestException("Passwords do not match");
         }
         // Use OtpPurpose.REGISTRATION, send OTP to email
         return otpService.sendOtp(

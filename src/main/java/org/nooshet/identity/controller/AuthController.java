@@ -98,7 +98,7 @@ public class AuthController {
     @PostMapping("/password-reset/complete")
     public ResponseEntity<Void> completePasswordReset(@Valid @RequestBody ResetPasswordRequest request) {
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
-            throw new IllegalArgumentException("Passwords do not match");
+            throw new org.nooshet.identity.exception.BadRequestException("Passwords do not match");
         }
         passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
         return ResponseEntity.ok().build();
