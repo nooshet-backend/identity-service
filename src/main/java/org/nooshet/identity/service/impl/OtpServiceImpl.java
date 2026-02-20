@@ -10,6 +10,7 @@ import org.nooshet.identity.entity.OtpSessionPayload;
 import org.nooshet.identity.entity.User;
 import org.nooshet.identity.exception.InvalidCredentialsException;
 import org.nooshet.identity.exception.OtpRateLimitedException;
+import org.nooshet.identity.exception.BadRequestException;
 import org.nooshet.identity.repository.UserRepository;
 import org.nooshet.identity.service.EmailService;
 import org.nooshet.identity.service.OtpService;
@@ -51,34 +52,42 @@ public class OtpServiceImpl implements OtpService {
 
     @Override
     public OtpSendResponse sendOtp(OtpSendRequest request) {
-        String identifier = request.getEmail();
-        if (identifier == null || identifier.isBlank()) {
-             // Fallback to mobile if needed, but for now we focus on email
-             identifier = request.getMobile();
-        }
-        
-        if (identifier == null || identifier.isBlank()) {
+        // Normalize inputs and validate separately so we can precisely check existence
+        String email = request.getEmail();
+        if (email != null) email = email.trim().toLowerCase();
+        String mobile = request.getMobile();
+        if (mobile != null) mobile = mobile.trim();
+
+        if ((email == null || email.isBlank()) && (mobile == null || mobile.isBlank())) {
             throw new org.nooshet.identity.exception.BadRequestException("Email or mobile must be provided");
         }
 
         OtpPurpose purpose = request.getPurpose();
-        
-        // Rate Limit Check
-        var rateLimitResult = otpRateLimiter.checkRateLimit(purpose, identifier);
+
+        // Rate Limit Check - use whichever identifier is provided for throttling (prefer email)
+        String rateLimitIdentifier = (email != null && !email.isBlank()) ? email : mobile;
+        var rateLimitResult = otpRateLimiter.checkRateLimit(purpose, rateLimitIdentifier);
         if (!rateLimitResult.isAllowed()) {
             // Log rate limit event for debugging
-            System.out.println("[OTP RATE LIMIT] Blocked OTP request for identifier: " + identifier + ", purpose: " + purpose + ", waitTimeSeconds: " + rateLimitResult.getWaitTimeSeconds());
+            System.out.println("[OTP RATE LIMIT] Blocked OTP request for identifier: " + rateLimitIdentifier + ", purpose: " + purpose + ", waitTimeSeconds: " + rateLimitResult.getWaitTimeSeconds());
             throw new OtpRateLimitedException("Rate limit exceeded", rateLimitResult.getWaitTimeSeconds());
         }
 
-        boolean exists = userRepository.findByEmail(identifier).isPresent();
-        if (!exists && request.getMobile() != null) {
-            exists = userRepository.findByPhone(request.getMobile()).isPresent();
+        // Check existence separately for email and phone to avoid false positives
+        boolean existsByEmail = false;
+        boolean existsByPhone = false;
+        if (email != null && !email.isBlank()) {
+            existsByEmail = userRepository.findByEmail(email).isPresent();
         }
+        if (mobile != null && !mobile.isBlank()) {
+            existsByPhone = userRepository.findByPhone(mobile).isPresent();
+        }
+        boolean exists = existsByEmail || existsByPhone;
 
-        // Security: Don't reveal if user exists or not, but handle logic
-        // For registration: we typically want to send OTP only if user DOES NOT exist (or maybe verify email anyway)
-        // For password reset: we want to send only if user EXISTS
+        // Debug logging to help trace unexpected CONFLICT responses in production
+        System.out.println("[OTP] startRegistration check - purpose=" + purpose + ", emailProvided=" + (email != null) + ", emailExists=" + existsByEmail + ", phoneProvided=" + (mobile != null) + ", phoneExists=" + existsByPhone);
+
+        // For registration: we want to block if either email or phone already exist
         if (purpose == OtpPurpose.REGISTRATION && exists) {
             throw new org.nooshet.identity.exception.ConflictException("A user with this email or phone already exists");
         } else if (purpose == OtpPurpose.PASSWORD_RESET && !exists) {
@@ -96,38 +105,40 @@ public class OtpServiceImpl implements OtpService {
                 .locked(false)
                 .verified(false)
                 .createdAt(Instant.now())
-                .email(request.getEmail())
-                .mobile(request.getMobile())
+                .email(email)
+                .mobile(mobile)
                 // include optional registration data when provided
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .userPasswordHash(request.getUserPasswordHash())
                 .build();
 
-        otpStore.saveOtpSessionAtomically(purpose, identifier, sessionId, payload, otpTtlSeconds);
+        // Choose identifier key for storing OTP session (prefer email)
+        String storeIdentifier = (email != null && !email.isBlank()) ? email : mobile;
+        otpStore.saveOtpSessionAtomically(purpose, storeIdentifier, sessionId, payload, otpTtlSeconds);
 
         // Send Email
-        if (request.getEmail() != null) {
-            Map<String, Object> variables = Map.of(
-                "otp", otp,
-                "expiresIn", otpTtlSeconds / 60
-            );
-            String templatePath = "src/main/resources/templates/otp-email-template.txt";
-            String emailContent = ((org.nooshet.identity.service.impl.EmailServiceImpl) emailService)
+        if (email != null) {
+             Map<String, Object> variables = Map.of(
+                 "otp", otp,
+                 "expiresIn", otpTtlSeconds / 60
+             );
+             String templatePath = "src/main/resources/templates/otp-email-template.txt";
+             String emailContent = ((org.nooshet.identity.service.impl.EmailServiceImpl) emailService)
                 .loadAndFillTemplate(templatePath, variables);
             emailService.sendSimpleEmail(
-                request.getEmail(),
+                email,
                 getSubjectForPurpose(purpose),
                 emailContent
             );
-        }
-        
-        return OtpSendResponse.builder()
-                .otpSessionId(sessionId)
-                .expiresInSeconds(otpTtlSeconds)
-                .resendAvailableInSeconds(resendCooldownSeconds)
-                .message("OTP sent")
-                .build();
+         }
+
+         return OtpSendResponse.builder()
+                 .otpSessionId(sessionId)
+                 .expiresInSeconds(otpTtlSeconds)
+                 .resendAvailableInSeconds(resendCooldownSeconds)
+                 .message("OTP sent")
+                 .build();
     }
 
     private String getSubjectForPurpose(OtpPurpose purpose) {
@@ -144,7 +155,7 @@ public class OtpServiceImpl implements OtpService {
                 .otpSessionId(java.util.UUID.randomUUID().toString())
                 .expiresInSeconds(otpTtlSeconds)
                 .resendAvailableInSeconds(resendCooldownSeconds)
-                .message("OTP sent") // Lie to prevent enumeration
+                .message(OtpMessages.OTP_SENT_IF_EXISTS) // Lie to prevent enumeration
                 .build();
     }
 
@@ -155,15 +166,18 @@ public class OtpServiceImpl implements OtpService {
         
         Optional<OtpSessionPayload> sessionOpt = otpStore.getOtpSession(request.getOtpSessionId());
         if (sessionOpt.isEmpty()) {
-            throw new InvalidCredentialsException("Invalid or expired OTP session");
+            // Missing session likely means expired or invalid session id
+            throw new BadRequestException("Invalid or expired OTP session");
         }
         
         OtpSessionPayload session = sessionOpt.get();
         if (Boolean.TRUE.equals(session.getLocked())) {
-            throw new InvalidCredentialsException("OTP session locked");
+            // Too many attempts -> inform client it's locked
+            throw new BadRequestException(OtpMessages.OTP_LOCKED);
         }
         if (Boolean.TRUE.equals(session.getVerified())) {
-             throw new InvalidCredentialsException("OTP already verified");
+            // Session was already used
+            throw new BadRequestException(OtpMessages.OTP_ALREADY_VERIFIED);
         }
         
         String inputHash = hashOtp(request.getOtpCode());
@@ -173,7 +187,8 @@ public class OtpServiceImpl implements OtpService {
                 session.setLocked(true);
             }
             otpStore.saveOtpSession(request.getOtpSessionId(), session, otpStore.getExpire(request.getOtpSessionId())); // naive update
-            throw new InvalidCredentialsException("Invalid OTP code");
+            // Incorrect code -> unauthorized
+            throw new InvalidCredentialsException(OtpMessages.INVALID_OTP);
         }
 
         session.setVerified(true);
@@ -183,7 +198,7 @@ public class OtpServiceImpl implements OtpService {
         
         OtpVerifyResponse.OtpVerifyResponseBuilder response = OtpVerifyResponse.builder()
                 .verified(true)
-                .message("Verified");
+                .message(OtpMessages.OTP_VERIFIED);
 
         if (session.getPurpose() == OtpPurpose.REGISTRATION) {
              // Build JSON payload for registration (include hashed password if present)

@@ -9,6 +9,7 @@ import org.nooshet.identity.entity.Role;
 import org.nooshet.identity.dto.CreateProfileRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
+import org.nooshet.identity.exception.BadRequestException;
 
 @Service
 @RequiredArgsConstructor
@@ -71,7 +72,7 @@ public class UserServiceImpl implements UserService {
         // Read payload JSON issued by OtpService
         String payloadJson = registrationTokenService.validateAndGetPayload(registrationToken);
         if (payloadJson == null || payloadJson.isBlank()) {
-            throw new IllegalArgumentException("Invalid or expired registration token");
+            throw new BadRequestException("Invalid or expired registration token");
         }
 
         try {
@@ -83,7 +84,7 @@ public class UserServiceImpl implements UserService {
             String passwordHash = payload.getOrDefault("userPasswordHash", "");
 
             if (email.isBlank() && mobile.isBlank()) {
-                throw new IllegalArgumentException("Payload missing identifier");
+                throw new BadRequestException("Registration token payload missing identifier");
             }
 
             String identifier = !email.isBlank() ? email : mobile;
@@ -126,8 +127,11 @@ public class UserServiceImpl implements UserService {
             }
 
             return saved;
+        } catch (BadRequestException e) {
+            // rethrow bad request exceptions as-is
+            throw e;
         } catch (Exception e) {
-            throw new RuntimeException("Failed to parse registration payload", e);
+            throw new BadRequestException("Invalid registration token payload");
         }
     }
 
