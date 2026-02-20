@@ -7,6 +7,8 @@ import org.nooshet.identity.service.UserService;
 import org.springframework.stereotype.Service;
 import org.nooshet.identity.entity.Role;
 import org.nooshet.identity.dto.CreateProfileRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -16,6 +18,7 @@ public class UserServiceImpl implements UserService {
     private final org.nooshet.identity.repository.RoleRepository roleRepository;
     private final org.nooshet.identity.client.UserServiceClient userServiceClient;
     private final org.nooshet.identity.service.RegistrationTokenService registrationTokenService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public User createNewUser(String firstName, String lastName, String passwordHash, String phone, String role, String email) {
@@ -65,44 +68,67 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User completeUserRegistration(String registrationToken, String role) {
-        // Use RegistrationTokenService to validate and get the identifier (email)
-        String identifier = registrationTokenService.validateAndGetIdentifier(registrationToken);
-        if (identifier == null) {
+        // Read payload JSON issued by OtpService
+        String payloadJson = registrationTokenService.validateAndGetPayload(registrationToken);
+        if (payloadJson == null || payloadJson.isBlank()) {
             throw new IllegalArgumentException("Invalid or expired registration token");
         }
 
-        // For demo: fetch registration data from Redis as JSON (assume email as identifier)
-        // In a real app, store all registration data (firstName, lastName, passwordHash, phone, email) in Redis at registration start
-        // Here, we only have the email, so we will create a minimal user
-        if (userRepository.findByEmail(identifier).isPresent()) {
-            throw new org.nooshet.identity.exception.ConflictException("User already exists with this email");
+        try {
+            Map<String, String> payload = objectMapper.readValue(payloadJson, Map.class);
+            String email = payload.getOrDefault("email", "");
+            String mobile = payload.getOrDefault("mobile", "");
+            String firstName = payload.getOrDefault("firstName", "User");
+            String lastName = payload.getOrDefault("lastName", "");
+            String passwordHash = payload.getOrDefault("userPasswordHash", "");
+
+            if (email.isBlank() && mobile.isBlank()) {
+                throw new IllegalArgumentException("Payload missing identifier");
+            }
+
+            String identifier = !email.isBlank() ? email : mobile;
+
+            if (userRepository.findByEmail(email).isPresent()) {
+                throw new org.nooshet.identity.exception.ConflictException("User already exists with this email");
+            }
+            if (userRepository.findByPhone(mobile).isPresent()) {
+                throw new org.nooshet.identity.exception.ConflictException("User already exists with this phone number");
+            }
+
+            String phone = !mobile.isBlank() ? mobile : identifier;
+
+            org.nooshet.identity.entity.Role roleEntity = roleRepository.findByName(role)
+                    .orElseThrow(() -> new RuntimeException("Role not found: " + role));
+
+            User user = User.builder()
+                    .phone(phone)
+                    .email(email)
+                    .passwordHash(passwordHash)
+                    .role(roleEntity)
+                    .setupRequired(true)
+                    .build();
+
+            User saved = userRepository.save(user);
+
+            // Optionally, create profile in user-service
+            try {
+                org.nooshet.identity.dto.CreateProfileRequest profileRequest = org.nooshet.identity.dto.CreateProfileRequest.builder()
+                        .userId(saved.getId())
+                        .firstName(firstName)
+                        .lastName(lastName)
+                        .phoneNumber(phone)
+                        .email(email)
+                        .role(roleEntity.getName()) // Send role name as String
+                        .build();
+                userServiceClient.createProfile(profileRequest, "change-me-in-prod-please-use-a-longer-secret-key-123456");
+            } catch (Exception e) {
+                System.err.println("Failed to create profile: " + e.getMessage());
+            }
+
+            return saved;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse registration payload", e);
         }
-        if (userRepository.findByPhone(identifier).isPresent()) {
-            throw new org.nooshet.identity.exception.ConflictException("User already exists with this phone number");
-        }
-
-        // For demo, use email as both email and phone, and set dummy values for other fields
-        String firstName = "User";
-        String lastName = "";
-        String passwordHash = "";
-        String phone = identifier;
-        String email = identifier;
-
-        // Find role entity
-        org.nooshet.identity.entity.Role roleEntity = roleRepository.findByName(role)
-                .orElseThrow(() -> new RuntimeException("Role not found: " + role));
-
-        User user = User.builder()
-                .phone(phone)
-                .email(email)
-                .passwordHash(passwordHash)
-                .role(roleEntity)
-                .setupRequired(true)
-                .build();
-
-        User saved = userRepository.save(user);
-        // Optionally, create profile in user-service
-        return saved;
     }
 
     @Override

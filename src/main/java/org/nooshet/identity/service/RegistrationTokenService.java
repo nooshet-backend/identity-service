@@ -15,17 +15,19 @@ public class RegistrationTokenService {
     private static final String PREFIX = "auth:registration:token:";
     private static final Duration TTL = Duration.ofMinutes(30);
 
-    public String issueForIdentifier(String identifier) {
+    // Store arbitrary JSON payload (e.g., registration data) under a token
+    public String issueForPayload(String payloadJson) {
         String token = UUID.randomUUID().toString();
-        redisTemplate.opsForValue().set(PREFIX + token, identifier, TTL);
+        redisTemplate.opsForValue().set(PREFIX + token, payloadJson, TTL);
         return token;
     }
 
-    public String validateAndGetIdentifier(String token) {
-        String identifier = redisTemplate.opsForValue().get(PREFIX + token);
-        if (identifier != null) {
+    // Return the JSON payload and delete the token (one-time use)
+    public String validateAndGetPayload(String token) {
+        String payload = redisTemplate.opsForValue().get(PREFIX + token);
+        if (payload != null) {
              redisTemplate.delete(PREFIX + token); // One-time use
         }
-        return identifier;
+        return payload;
     }
 }

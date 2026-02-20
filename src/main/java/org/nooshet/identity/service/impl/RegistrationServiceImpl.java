@@ -55,6 +55,10 @@ public class RegistrationServiceImpl implements RegistrationService {
         return otpService.sendOtp(
             org.nooshet.identity.dto.OtpSendRequest.builder()
                 .email(request.getEmail())
+                .mobile(request.getPhoneNumber())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .userPasswordHash(passwordEncoder.encode(request.getPassword()))
                 .purpose(org.nooshet.identity.constants.OtpPurpose.REGISTRATION)
                 .build()
         );

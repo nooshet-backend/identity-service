@@ -98,6 +98,10 @@ public class OtpServiceImpl implements OtpService {
                 .createdAt(Instant.now())
                 .email(request.getEmail())
                 .mobile(request.getMobile())
+                // include optional registration data when provided
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .userPasswordHash(request.getUserPasswordHash())
                 .build();
 
         otpStore.saveOtpSessionAtomically(purpose, identifier, sessionId, payload, otpTtlSeconds);
@@ -182,11 +186,20 @@ public class OtpServiceImpl implements OtpService {
                 .message("Verified");
 
         if (session.getPurpose() == OtpPurpose.REGISTRATION) {
-             response.registrationToken(registrationTokenService.issueForIdentifier(identifier));
-        } else if (session.getPurpose() == OtpPurpose.PASSWORD_RESET) {
-             response.resetToken(resetPasswordTokenService.issueForIdentifier(identifier));
-        }
-        
+             // Build JSON payload for registration (include hashed password if present)
+             String payloadJson = String.format(
+                     "{\"email\":\"%s\",\"mobile\":\"%s\",\"firstName\":\"%s\",\"lastName\":\"%s\",\"userPasswordHash\":\"%s\"}",
+                     escapeJson(session.getEmail()),
+                     escapeJson(session.getMobile()),
+                     escapeJson(session.getFirstName()),
+                     escapeJson(session.getLastName()),
+                     escapeJson(session.getUserPasswordHash())
+             );
+             response.registrationToken(registrationTokenService.issueForPayload(payloadJson));
+         } else if (session.getPurpose() == OtpPurpose.PASSWORD_RESET) {
+              response.resetToken(resetPasswordTokenService.issueForIdentifier(identifier));
+         }
+
         return response.build();
     }
 
@@ -198,5 +211,11 @@ public class OtpServiceImpl implements OtpService {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("SHA-256 not available", e);
         }
+    }
+
+    // Simple JSON escaper for null-safe values
+    private static String escapeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
     }
 }

@@ -17,4 +17,9 @@ public class OtpSendRequest {
     private String email;
     @NotNull
     private OtpPurpose purpose;
+
+    // Optional registration data
+    private String firstName;
+    private String lastName;
+    private String userPasswordHash; // store hashed password, not raw
 }
