@@ -21,11 +21,11 @@ public class UserServiceImpl implements UserService {
     public User createNewUser(String firstName, String lastName, String passwordHash, String phone, String role, String email) {
         // Validate unique email
         if (userRepository.findByEmail(email).isPresent()) {
-            throw new IllegalStateException("A user with this email already exists");
+            throw new org.nooshet.identity.exception.ConflictException("A user with this email already exists");
         }
         // Validate unique phone
         if (userRepository.findByPhone(phone).isPresent()) {
-            throw new IllegalStateException("A user with this phone number already exists");
+            throw new org.nooshet.identity.exception.ConflictException("A user with this phone number already exists");
         }
 
         org.nooshet.identity.entity.Role roleEntity = roleRepository.findByName(role)
@@ -75,10 +75,10 @@ public class UserServiceImpl implements UserService {
         // In a real app, store all registration data (firstName, lastName, passwordHash, phone, email) in Redis at registration start
         // Here, we only have the email, so we will create a minimal user
         if (userRepository.findByEmail(identifier).isPresent()) {
-            throw new IllegalStateException("User already exists with this email");
+            throw new org.nooshet.identity.exception.ConflictException("User already exists with this email");
         }
         if (userRepository.findByPhone(identifier).isPresent()) {
-            throw new IllegalStateException("User already exists with this phone number");
+            throw new org.nooshet.identity.exception.ConflictException("User already exists with this phone number");
         }
 
         // For demo, use email as both email and phone, and set dummy values for other fields
@@ -108,7 +108,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void markSetupComplete(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new org.nooshet.identity.exception.BadRequestException("User not found: " + userId));
         user.setSetupRequired(false);
         userRepository.save(user);
     }

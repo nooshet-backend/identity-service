@@ -23,12 +23,12 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(request.getEmail()).orElse(null);
 
         if (user == null) {
-             throw new org.nooshet.identity.exception.InvalidCredentialsException("Invalid username or password");
+             throw new org.nooshet.identity.exception.InvalidCredentialsException("Invalid email or password");
         }
 
         // 2. Verify Password
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new org.nooshet.identity.exception.InvalidCredentialsException("Invalid username or password");
+            throw new org.nooshet.identity.exception.InvalidCredentialsException("Invalid email or password");
         }
 
         // 3. Generate Tokens
