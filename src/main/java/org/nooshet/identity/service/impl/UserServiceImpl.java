@@ -142,4 +142,26 @@ public class UserServiceImpl implements UserService {
         user.setSetupRequired(false);
         userRepository.save(user);
     }
+
+    @Override
+    public java.util.List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new org.nooshet.identity.exception.BadRequestException("User not found: " + userId));
+
+        try {
+            // Delete profile in user-service via Feign
+            // Using the same placeholder secret for now
+            userServiceClient.deleteProfile(userId, "change-me-in-prod-please-use-a-longer-secret-key-123456");
+        } catch (Exception e) {
+            System.err.println("Failed to delete profile in user-service: " + e.getMessage());
+        }
+
+        userRepository.delete(user);
+    }
 }

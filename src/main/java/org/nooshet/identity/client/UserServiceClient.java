@@ -12,4 +12,7 @@ public interface UserServiceClient {
 
     @PostMapping("/api/v1/internal/profiles")
     ApiResponse<String> createProfile(@RequestBody CreateProfileRequest request, @RequestHeader("X-Internal-Secret") String secret);
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/api/v1/internal/profiles/{userId}")
+    ApiResponse<String> deleteProfile(@org.springframework.web.bind.annotation.PathVariable("userId") Long userId, @RequestHeader("X-Internal-Secret") String secret);
 }
