@@ -3,6 +3,7 @@ package org.nooshet.identity.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.nooshet.identity.dto.LoginRequest;
 import org.nooshet.identity.dto.LoginResponse;
+import org.nooshet.identity.dto.UserDto;
 import org.nooshet.identity.entity.User;
 import org.nooshet.identity.repository.UserRepository;
 import org.nooshet.identity.security.JwtService;
@@ -35,11 +36,12 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtService.generateAccessToken(user.getId(), java.util.Collections.singletonList(user.getRole().getName()));
         String refreshToken = jwtService.generateRefreshToken(user.getId());
 
-        // 4. Return Response
+        // 4. Return Response (include user dto)
         return LoginResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .expiresIn(3600L) // Should get from properties
+                .user(UserDto.fromEntity(user))
                 .build();
     }
 }
