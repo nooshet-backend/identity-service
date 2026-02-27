@@ -7,6 +7,7 @@ import org.nooshet.identity.dto.OtpVerifyRequest;
 import org.nooshet.identity.dto.OtpVerifyResponse;
 import org.nooshet.identity.dto.RegisterCompleteRequest;
 import org.nooshet.identity.dto.RegisterRequest;
+import org.nooshet.identity.dto.UserDto;
 import org.nooshet.identity.entity.User;
 import org.nooshet.identity.security.JwtService;
 import org.nooshet.identity.service.RegistrationService;
@@ -42,6 +43,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .expiresIn(3600L)
+                .user(UserDto.fromEntity(user))
                 .build();
     }
 

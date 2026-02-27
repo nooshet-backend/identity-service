@@ -1,6 +1,7 @@
 package org.nooshet.identity.service.impl;
 
 import org.nooshet.identity.dto.LoginResponse;
+import org.nooshet.identity.dto.UserDto;
 import org.nooshet.identity.entity.User;
 import org.nooshet.identity.service.TokenIssuanceService;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,7 @@ public class TokenIssuanceServiceImpl implements TokenIssuanceService {
         LoginResponse resp = new LoginResponse();
         resp.setAccessToken("access-token-for-user-" + (user.getId() != null ? user.getId() : "new"));
         resp.setRefreshToken("refresh-token-for-user-" + (user.getId() != null ? user.getId() : "new"));
+        resp.setUser(UserDto.fromEntity(user));
         return resp;
     }
 }
-
