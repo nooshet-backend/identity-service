@@ -40,7 +40,7 @@ spring:
           writetimeout: 5000
 
 springdoc:
-  server-url: "http://95.111.228.89"
+  server-url: "http://158.220.127.32"
 
 # JWT Configuration
 jwt:
