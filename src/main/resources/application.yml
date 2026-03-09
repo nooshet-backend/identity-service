@@ -66,3 +66,7 @@ logging:
     root: INFO
     org.nooshet.identity: DEBUG
     org.springframework.security: DEBUG
+
+application:
+  config:
+    user-service-url: user-service:8080
